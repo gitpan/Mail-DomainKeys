@@ -1,0 +1,15 @@
+# http://module-build.sourceforge.net/META-spec.html
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         Mail-DomainKeys
+version:      0.14
+version_from: lib/Mail/DomainKeys/Key.pm
+installdirs:  site
+requires:
+    Crypt::OpenSSL::RSA:           0
+    Mail::Address:                 0
+    MIME::Base64:                  0
+    Net::DNS:                      0
+    Test::More:                    0
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.17

@@ -1,0 +1,16 @@
+lib/Mail/DomainKeys/Header.pm
+lib/Mail/DomainKeys/Key.pm
+lib/Mail/DomainKeys/Key/Private.pm
+lib/Mail/DomainKeys/Key/Public.pm
+lib/Mail/DomainKeys/Message.pm
+lib/Mail/DomainKeys/Policy.pm
+lib/Mail/DomainKeys/Signature.pm
+Makefile.PL
+MANIFEST			This list of files
+META.yml
+README
+t/fetchpublickey.t
+t/noverifynofws.t
+t/noverifysimple.t
+t/verifynofws.t
+t/verifysimple.t
