@@ -6,7 +6,7 @@ package Mail::DomainKeys::Policy;
 
 use strict;
 
-our $VERSION = "0.14";
+our $VERSION = "0.18";
 
 sub new {
 	my $type = shift;
@@ -133,7 +133,10 @@ sub signall {
 sub signsome {
 	my $self = shift;
 
-	$self->policy and $self->policy eq "~" and
+	$self->policy or
+		return 1;
+
+	$self->policy eq "~" and
 		return 1;
 
 	return;

@@ -6,7 +6,7 @@ package Mail::DomainKeys::Signature;
 
 use strict;
 
-our $VERSION = "0.14";
+our $VERSION = "0.18";
 
 sub new {
 	my $type = shift;
@@ -94,8 +94,51 @@ sub as_string {
 }
 
 sub sign {
+	use MIME::Base64;
+
 	my $self = shift;
 	my %prms = @_;
+
+	$self->method($prms{'Method'}) if $prms{'Method'};
+	$self->selector($prms{'Selector'}) if $prms{'Selector'};
+	$self->private($prms{'Private'}) if $prms{'Private'};
+
+	my $text = $prms{'Text'} or
+		$self->errorstr("no text given"),
+		return;
+
+	$self->method or
+		$self->errorstr("no method specified"),
+		return;
+
+	$self->private or
+		$self->errorstr("no private key specified"),
+		return;
+
+	$self->selector or
+		$self->errorstr("no selector specified"),
+		return;
+
+	$self->domain or
+		$self->errorstr("no domain specified"),
+		return;
+
+	$self->protocol or $self->protocol("dns");
+	$self->algorithm or $self->algorithm("rsa-sha1");
+
+	# FIXME: only needs to match the end of the domain
+	#$prms{'Sender'}->host eq $self->domain or
+	#	$self->errorstr("domain does not match address"),
+	#	return;
+
+	my $sign = $self->private->sign($text);
+	my $signb64 = encode_base64($sign, "");
+
+	$self->signature($signb64);
+
+	$self->status("good");
+
+	return 1;
 }
 
 
@@ -192,9 +235,9 @@ sub errorstr {
 	my $self = shift;
 
 	(@_) and
-		$self->{'FAIL'} = shift;
+		$self->{'ESTR'} = shift;
 
-	$self->{'FAIL'};
+	$self->{'ESTR'};
 }
 
 sub headerlist {

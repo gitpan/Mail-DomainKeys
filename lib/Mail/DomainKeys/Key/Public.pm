@@ -8,7 +8,7 @@ use base "Mail::DomainKeys::Key";
 
 use strict;
 
-our $VERSION = "0.14";
+our $VERSION = "0.18";
 
 sub new {
 	my $type = shift;
@@ -145,7 +145,18 @@ sub convert {
 
 	$cert .= "-----END PUBLIC KEY-----\n";
 
-	my $cork = new_public_key Crypt::OpenSSL::RSA($cert);
+	my $cork;
+	
+	eval {
+		$cork = new_public_key Crypt::OpenSSL::RSA($cert);
+	};
+
+	$@ and
+		$self->errorstr($@),
+		return;
+
+	$cork or
+		return;
 
 	# segfaults on my machine
 #	$cork->check_key or
@@ -161,10 +172,17 @@ sub verify {
 	my %prms = @_;
 
 
-	$self->cork->verify($prms{'Text'}, $prms{'Signature'}) and
-		return 1;
+	my $rtrn;
 
-	return;	
+	eval {
+		$rtrn = $self->cork->verify($prms{'Text'}, $prms{'Signature'});
+	}; 
+
+	$@ and
+		$self->errorstr($@),
+		return;
+	
+	return $rtrn;
 }
 
 sub granularity {

@@ -6,7 +6,7 @@ package Mail::DomainKeys::Message;
 
 use strict;
 
-our $VERSION = "0.14";
+our $VERSION = "0.18";
 
 sub load {
 	use Mail::Address;
@@ -72,18 +72,17 @@ sub load {
 			return;
 
 		if ($hdr->key =~ /^From$/i and !$seen{'FROM'}) {
-			my @list = parse Mail::Address($hdr->unfolded);
+			my @list = parse Mail::Address($hdr->vunfolded);
 			$self->{'FROM'} = $list[0]; 
 			$seen{'FROM'} = 1; 
 		} elsif ($hdr->key =~ /^Sender$/i and !$seen{'SNDR'}) {
-			my @list = parse Mail::Address($hdr->unfolded);
+			my @list = parse Mail::Address($hdr->vunfolded);
 			$self->{'SNDR'} = $list[0];
 			$seen{'SNDR'} = 1;
 		} elsif ($hdr->key =~ /^DomainKey-Signature$/i and
 			not $seen{'SIGN'}) {
-			my $line = $hdr->unfolded;
 			$self->{'SIGN'} = parse Mail::DomainKeys::Signature(
-				String => $line);
+				String => $hdr->vunfolded);
 			$seen{'SIGN'} = 1;
 		}
 	}
@@ -105,25 +104,46 @@ sub load {
 	bless $self, $type;
 }
 
+sub gethline {
+	my($self, $headers) = @_;
+
+	return unless length($headers);
+
+	my %hmap = map { lc($_) => 1 } (split(/:/, $headers));
+
+	my @found = ();
+	foreach my $hdr (@{$self->head}) {
+		if ($hmap{lc($hdr->key)}) {
+			push(@found, $hdr->key);        
+			delete $hmap{$hdr->key};
+		}
+	}
+
+	my $res = join(':', @found);
+	return $res;
+}
+
 sub header {
 	my $self = shift;
 
-	($self->signed) or
+	$self->signed or
 		return new Mail::DomainKeys::Header(
 			Line => "DomainKey-Status: no signature");
 
-	return new Mail::DomainKeys::Header(
+	$self->signature->status and
+		return new Mail::DomainKeys::Header(
 		Line => "DomainKey-Status: " . $self->signature->status);
 }
 
 sub nofws {	
 	my $self = shift;
+	my $signing = shift || 0;
 
 	my $text;
 
 
 	foreach my $hdr (@{$self->head}) {
-		$hdr->signed or
+		($hdr->signed || $signing) or
 			next;
 		$self->signature->wantheader($hdr->key) or
 			next;
@@ -155,18 +175,22 @@ sub nofws {
 
 sub simple {
 	my $self = shift;
+	my $signing = shift || 0;
 
 	my $text;
 
 
 	foreach my $hdr (@{$self->head}) {
-		$hdr->signed or
+		($hdr->signed || $signing) or
 			next;
 		$self->signature->wantheader($hdr->key) or
 			next;
 		my $line = $hdr->line;
-		$line =~ s/([^\r])\n/$1\r\n/g; # yuck
-		$text .= $line;
+		# $line =~ s/([^\r])\n/$1\r\n/g; # yuck
+		#$line =~ s/([^\r])\n/$1\r\n/g; # yuck
+		#chomp($line);
+		$line =~ s/[\r\n]+//g;
+		$text .= $line . "\r\n";
 	}
 
 	# make sure there is a body before adding a seperator line
@@ -183,10 +207,12 @@ sub simple {
 
 	foreach my $lin (@{$self->{'BODY'}}) {
 		my $line = $lin;
-		$line eq "\n" and
-			$line = "\r\n";
-		$line =~ s/([^\r])\n/$1\r\n/g; # yuck
-		$text .= $line;
+		#$line eq "\n" and
+		#	$line = "\r\n";
+		#$line =~ s/([^\r])\n/$1\r\n/g; # yuck
+		#$text .= $line;
+		$line =~ s/[\r\n]+//g;
+		$text .= $line . "\r\n";
 	}
 
 	return $text;
@@ -196,12 +222,20 @@ sub sign {
 	my $self = shift;
 	my %prms = @_;
 
-	$self->signature(new Mail::DomainKeys::Signature(
+	my $hline = $self->gethline($prms{'Headers'});
+
+	my $sign = new Mail::DomainKeys::Signature(
 		Method => $prms{'Method'},
 		Domain => $self->senderdomain,
-		Selector => $prms{'Selector'}));
+		Headers => $hline,
+		Selector => $prms{'Selector'});
 
-	return $self->signature->sign(Text => $self->nofws, Private => $prms{'Private'});
+	$self->signature($sign);
+
+	my $canon= $sign->method eq "nofws" ? $self->nofws(1) : $self->simple(1);
+	$sign->sign(Text => $canon, Private => $prms{'Private'});
+
+	return $sign;
 }
 
 sub verify {

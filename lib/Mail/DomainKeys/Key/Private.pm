@@ -8,7 +8,7 @@ use base "Mail::DomainKeys::Key";
 
 use strict;
 
-our $VERSION = "0.14";
+our $VERSION = "0.18";
 
 sub load {
 	my $type = shift;
@@ -57,8 +57,21 @@ sub convert {
 
 	$pkcs .= "-----END RSA PRIVATE KEY-----\n";
 
-	my $cork = new_private_key Crypt::OpenSSL::RSA($pkcs);
+	
+	my $cork;
 
+	eval {
+		$cork = new_private_key Crypt::OpenSSL::RSA($pkcs);
+	};
+
+	$@ and
+		$self->errorstr($@),
+		return;
+
+	$cork or
+		return;
+
+	# segfaults on my machine
 #	$cork->check_key or
 #		return;
 
@@ -72,7 +85,15 @@ sub sign {
 	my $mail = shift;
 
 
-	return $self->cork->sign($mail);
+	my $rtrn;
+	
+	eval { $rtrn = $self->cork->sign($mail); };
+
+	$@ and
+		$self->errorstr($@),
+		return;
+	
+	return $rtrn;
 }
 
 1;

@@ -6,7 +6,7 @@ package Mail::DomainKeys::Header;
 
 use strict;
 
-our $VERSION = "0.14";
+our $VERSION = "0.18";
 
 sub new {
 	my $type = shift;
@@ -44,17 +44,24 @@ sub append {
 	my $cont = shift;
 
 	$self->line($self->line . $cont);
-	$self->value($self->value . $cont);
 }
 
 sub unfolded {
 	my $self = shift;
 
 	my $line = $self->line;
-#	$line =~ s/^.*?:\s//g;
 	$line =~ s/\n//g;
 
 	return $line . "\n";
+}
+
+sub vunfolded {
+	my $self = shift;
+
+	my $valu = $self->value;
+	$valu =~ s/\n//g;
+
+	return $valu . "\n";
 }
 
 sub key {
@@ -89,7 +96,7 @@ sub value {
 
 	$self->line =~ /^\S+:\s(.*)/s and
 		return $1;
-	
+
 	return;
 }
 

@@ -1,3 +1,4 @@
+lib/Mail/DomainKeys.pm
 lib/Mail/DomainKeys/Header.pm
 lib/Mail/DomainKeys/Key.pm
 lib/Mail/DomainKeys/Key/Private.pm

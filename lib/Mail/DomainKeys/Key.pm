@@ -6,7 +6,7 @@ package Mail::DomainKeys::Key;
 
 use strict;
 
-our $VERSION = "0.14";
+our $VERSION = "0.18";
 
 sub cork {
 	my $self = shift;
@@ -27,6 +27,15 @@ sub data {
 		$self->{'DATA'} = shift;
 
 	$self->{'DATA'};
+}
+
+sub errorstr {
+	my $self = shift;
+
+	(@_) and 
+		$self->{'ESTR'} = shift;
+
+	$self->{'ESTR'};
 }
 
 sub size {

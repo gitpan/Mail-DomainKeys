@@ -38,7 +38,7 @@ if ($inet) {
 
 WriteMakefile(
 	NAME          => "Mail::DomainKeys",
-	VERSION_FROM  => "lib/Mail/DomainKeys/Key.pm",
+	VERSION_FROM  => "lib/Mail/DomainKeys.pm",
 	PREREQ_PM     => {
 		"Crypt::OpenSSL::RSA"	=> 0,
 		"Mail::Address"		=> 0,
