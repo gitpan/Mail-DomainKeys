@@ -6,7 +6,7 @@ package Mail::DomainKeys::Message;
 
 use strict;
 
-our $VERSION = "0.18";
+our $VERSION = "0.21";
 
 sub load {
 	use Mail::Address;
@@ -104,6 +104,22 @@ sub load {
 	bless $self, $type;
 }
 
+sub canonify {
+	my $self = shift;
+
+
+	$self->signature->method or
+		return;
+
+	$self->signature->method eq "nofws" and
+		return $self->nofws;
+
+	$self->signature->method eq "simple" and
+		return $self->simple;
+
+	return;
+}
+
 sub gethline {
 	my($self, $headers) = @_;
 
@@ -137,13 +153,12 @@ sub header {
 
 sub nofws {	
 	my $self = shift;
-	my $signing = shift || 0;
 
 	my $text;
 
 
 	foreach my $hdr (@{$self->head}) {
-		($hdr->signed || $signing) or
+		$hdr->signed or $self->signature->signing or
 			next;
 		$self->signature->wantheader($hdr->key) or
 			next;
@@ -175,13 +190,12 @@ sub nofws {
 
 sub simple {
 	my $self = shift;
-	my $signing = shift || 0;
 
 	my $text;
 
 
 	foreach my $hdr (@{$self->head}) {
-		($hdr->signed || $signing) or
+		$hdr->signed or $self->signature->signing or
 			next;
 		$self->signature->wantheader($hdr->key) or
 			next;
@@ -228,12 +242,12 @@ sub sign {
 		Method => $prms{'Method'},
 		Domain => $self->senderdomain,
 		Headers => $hline,
-		Selector => $prms{'Selector'});
+		Selector => $prms{'Selector'},
+		Signing => 1);
 
 	$self->signature($sign);
 
-	my $canon= $sign->method eq "nofws" ? $self->nofws(1) : $self->simple(1);
-	$sign->sign(Text => $canon, Private => $prms{'Private'});
+	$sign->sign(Text => $self->canonify, Private => $prms{'Private'});
 
 	return $sign;
 }
@@ -245,15 +259,8 @@ sub verify {
 	$self->signed or
 		return;
 
-	if ($self->signature->method eq "nofws") {
-		return $self->signature->verify(Text => $self->nofws,
-			Sender => ($self->sender or $self->from));
-	} elsif ($self->signature->method eq "simple") {
-		return $self->signature->verify(Text => $self->simple,
-			Sender => ($self->sender or $self->from));
-	} else {
-		return;
-	}
+	return $self->signature->verify(Text => $self->canonify,
+		Sender => ($self->sender or $self->from));
 
 }
 

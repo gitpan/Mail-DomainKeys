@@ -6,7 +6,7 @@ package Mail::DomainKeys::Signature;
 
 use strict;
 
-our $VERSION = "0.18";
+our $VERSION = "0.21";
 
 sub new {
 	my $type = shift;
@@ -20,6 +20,8 @@ sub new {
 	$self->{'HDRS'} = $prms{'Headers'};
 	$self->{'PROT'} = $prms{'Query'};
 	$self->{'SLCT'} = $prms{'Selector'};
+	$self->{'SIGN'} = $prms{'Signing'};
+	$self->{'CFWS'} = $prms{'FWS'};
 
 	bless $self, $type;
 }
@@ -74,23 +76,26 @@ sub as_string {
 
 	my $text;
 
-
 	$self->algorithm and
 		$text .= "a=" . $self->algorithm . "; ";
 
 	$self->headerlist and
 		$text .= "h=" . $self->headerlist . "; ";
 
-	$text .= "b=" . $self->signature . "; ";
-	$text .= "c=" . $self->method . "; ";
-	$text .= "d=" . $self->domain . "; ";
 	$text .= "q=" . $self->protocol . "; ";
-	$text .= "s=" . $self->selector;
+	$text .= "c=" . $self->method . "; ";
+	$text .= "s=" . $self->selector . "; ";
+	$text .= "d=" . $self->domain . "; ";
+	$text .= "b=" . $self->signature;
 
-	length $text and
-		return $text;
+	if (my $cfws = $self->fws) {
+		require Text::Wrap;
 
-	return;
+		local $Text::Wrap::columns = 78;
+		Text::Wrap::wrap("", $cfws, $text);
+	}
+		
+	return $text;
 }
 
 sub sign {
@@ -207,25 +212,16 @@ sub verify {
 sub algorithm {
 	my $self = shift;
 
-	(@_) and
+	@_ and
 		$self->{'ALGO'} = shift;
 
 	$self->{'ALGO'};
 }	
 
-sub signature {
-	my $self = shift;
-
-	(@_) and
-		$self->{'DATA'} = shift;
-
-	$self->{'DATA'};
-}	
-
 sub domain {
 	my $self = shift;
 
-	(@_) and
+	@_ and
 		$self->{'DOMN'} = shift;
 
 	$self->{'DOMN'};
@@ -234,16 +230,25 @@ sub domain {
 sub errorstr {
 	my $self = shift;
 
-	(@_) and
+	@_ and
 		$self->{'ESTR'} = shift;
 
 	$self->{'ESTR'};
 }
 
+sub fws {
+	my $self = shift;
+
+	@_ and
+		$self->{'CFWS'} = shift;
+
+	return $self->{'CFWS'};
+}
+
 sub headerlist {
 	my $self = shift;
 
-	(@_) and
+	@_ and
 		$self->{'HDRS'} = shift;
 
 	if (wantarray and $self->{'HDRS'}) {
@@ -257,7 +262,7 @@ sub headerlist {
 sub method {
 	my $self = shift;
 
-	(@_) and
+	@_ and
 		$self->{'METH'} = shift;
 
 	$self->{'METH'};
@@ -266,7 +271,7 @@ sub method {
 sub public {
 	my $self = shift;
 
-	(@_) and
+	@_ and
 		$self->{'PBLC'} = shift;
 
 	$self->{'PBLC'};
@@ -275,7 +280,7 @@ sub public {
 sub private {
 	my $self = shift;
 
-	(@_) and
+	@_ and
 		$self->{'PRIV'} = shift;
 
 	$self->{'PRIV'};
@@ -284,7 +289,7 @@ sub private {
 sub protocol {
 	my $self = shift;
 
-	(@_) and
+	@_ and
 		$self->{'PROT'} = shift;
 
 	$self->{'PROT'};
@@ -293,16 +298,34 @@ sub protocol {
 sub selector {
 	my $self = shift;
 
-	(@_) and
+	@_ and
 		$self->{'SLCT'} = shift;
 
 	$self->{'SLCT'};
 }	
 
+sub signature {
+	my $self = shift;
+
+	@_ and
+		$self->{'DATA'} = shift;
+
+	$self->{'DATA'};
+}	
+
+sub signing {
+	my $self = shift;
+
+	@_ and
+		$self->{'SIGN'} = shift;
+
+	$self->{'SIGN'};
+}	
+
 sub status {
 	my $self = shift;
 
-	(@_) and
+	@_ and
 		$self->{'STAT'} = shift;
 
 	$self->{'STAT'};

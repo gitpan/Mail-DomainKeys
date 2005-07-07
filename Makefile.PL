@@ -43,7 +43,7 @@ WriteMakefile(
 		"Crypt::OpenSSL::RSA"	=> 0,
 		"Mail::Address"		=> 0,
 		"MIME::Base64"		=> 0,
-		"Net::DNS"		=> 0,
+		"Net::DNS"		=> 0.34,
 		"Test::More"		=> 0
 	},
 	clean         => { FILES => "t/connected" }

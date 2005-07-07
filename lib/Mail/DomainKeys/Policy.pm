@@ -6,7 +6,7 @@ package Mail::DomainKeys::Policy;
 
 use strict;
 
-our $VERSION = "0.18";
+our $VERSION = "0.21";
 
 sub new {
 	my $type = shift;

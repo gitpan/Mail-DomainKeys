@@ -9,7 +9,6 @@ SKIP: {
 		skip("need connectivity", 4);
 
 	my $pubk = fetch Mail::DomainKeys::Key::Public(
-#		Protocol => "dns", Domain => "killa.net", Selector => "mdkp");
 		Protocol => "dns", Domain => "yahoo.com", Selector => "s1024");
 
 	ok(defined $pubk, "got the key...");
