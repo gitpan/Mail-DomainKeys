@@ -6,7 +6,7 @@ package Mail::DomainKeys::Key;
 
 use strict;
 
-our $VERSION = "0.21";
+our $VERSION = "0.22";
 
 sub cork {
 	my $self = shift;

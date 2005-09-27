@@ -6,7 +6,7 @@ package Mail::DomainKeys::Message;
 
 use strict;
 
-our $VERSION = "0.21";
+our $VERSION = "0.22";
 
 sub load {
 	use Mail::Address;
@@ -173,9 +173,9 @@ sub nofws {
 
 	# delete trailing blank lines
 	foreach (reverse @{$self->{'BODY'}}) {
-		/./ and
+		/[^\r\n]/ and # last non-blank line
 			last;
-		/^$/ and
+		/^\r?$/ and
 			pop @{$self->{'BODY'}};
 	}
 
@@ -213,9 +213,9 @@ sub simple {
 
 	# delete trailing blank lines
 	foreach (reverse @{$self->{'BODY'}}) {
-		/./ and
+		/[^\r\n]/ and # last non-blank line
 			last;
-		/^$/ and
+		/^\r?$/ and
 			pop @{$self->{'BODY'}};
 	}
 
