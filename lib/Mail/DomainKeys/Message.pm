@@ -6,7 +6,7 @@ package Mail::DomainKeys::Message;
 
 use strict;
 
-our $VERSION = "0.22";
+our $VERSION = "0.23";
 
 sub load {
 	use Mail::Address;
@@ -163,7 +163,7 @@ sub nofws {
 		$self->signature->wantheader($hdr->key) or
 			next;
 		my $line = $hdr->unfolded;
-		$line =~ s/[\t\n\r\ ]//g;
+		$line =~ s/[\s\r\n]//g;
 		$text .= $line . "\r\n";
 	}
 
@@ -173,15 +173,15 @@ sub nofws {
 
 	# delete trailing blank lines
 	foreach (reverse @{$self->{'BODY'}}) {
-		/[^\r\n]/ and # last non-blank line
+		/[^\s\r\n]/ and # last non-blank line
 			last;
-		/^\r?$/ and
+		/^[\s\r\n]*$/ and
 			pop @{$self->{'BODY'}};
 	}
 
 	foreach my $lin (@{$self->{'BODY'}}) {
 		my $line = $lin;
-		$line =~ s/[\t\n\r\ ]//g;
+		$line =~ s/[\s\r\n]//g;
 		$text .= $line . "\r\n";
 	}
 
@@ -215,7 +215,7 @@ sub simple {
 	foreach (reverse @{$self->{'BODY'}}) {
 		/[^\r\n]/ and # last non-blank line
 			last;
-		/^\r?$/ and
+		/^[\r\n]*$/ and
 			pop @{$self->{'BODY'}};
 	}
 
