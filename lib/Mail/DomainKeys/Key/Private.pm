@@ -8,7 +8,7 @@ use base "Mail::DomainKeys::Key";
 
 use strict;
 
-our $VERSION = "0.23";
+our $VERSION = "0.80";
 
 sub load {
 	my $type = shift;

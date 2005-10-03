@@ -6,7 +6,7 @@ package Mail::DomainKeys::Signature;
 
 use strict;
 
-our $VERSION = "0.23";
+our $VERSION = "0.80";
 
 sub new {
 	my $type = shift;
@@ -82,17 +82,19 @@ sub as_string {
 	$self->headerlist and
 		$text .= "h=" . $self->headerlist . "; ";
 
-	$text .= "q=" . $self->protocol . "; ";
+#	$text .= "q=" . $self->protocol . "; ";
 	$text .= "c=" . $self->method . "; ";
 	$text .= "s=" . $self->selector . "; ";
 	$text .= "d=" . $self->domain . "; ";
 	$text .= "b=" . $self->signature;
 
-	if (my $cfws = $self->fws) {
+	if (defined (my $cfws = $self->fws)) {
 		require Text::Wrap;
 
 		local $Text::Wrap::columns = 78;
-		Text::Wrap::wrap("", $cfws, $text);
+
+		$text = Text::Wrap::wrap("", $cfws, $text);
+		$text .= "\n";
 	}
 		
 	return $text;

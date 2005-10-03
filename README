@@ -1,5 +1,14 @@
 Yuck, I hate writing documentation.  You get what you pay for, though.  I
-intend to do a full documentation set once the interfaces are finalized.
+intend to do a full documentation set starting with version 0.80.
+
+Starting with version 0.79, the canonifiers are much more conformant to the
+DomainKeys draft. Mail::DomainKeys now passes the DomainKeys canonifier
+torture tests available here:
+
+http://sourceforge.net/project/showfiles.php?group_id=107680&package_id=148819
+
+Be aware that DomainKeys is going out of fashion; it appears that DKIM may
+be its successor. It's still up in the air, though, as far as I can tell.
 
 Installation is ala mode:
 

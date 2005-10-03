@@ -6,7 +6,7 @@ package Mail::DomainKeys::Message;
 
 use strict;
 
-our $VERSION = "0.23";
+our $VERSION = "0.80";
 
 sub load {
 	use Mail::Address;
@@ -121,11 +121,11 @@ sub canonify {
 }
 
 sub gethline {
-	my($self, $headers) = @_;
+	my $self = shift;
+	my $hdrs = shift or
+		return;
 
-	return unless length($headers);
-
-	my %hmap = map { lc($_) => 1 } (split(/:/, $headers));
+	my %hmap = map { lc($_) => 1 } (split(/:/, $hdrs));
 
 	my @found = ();
 	foreach my $hdr (@{$self->head}) {
@@ -137,18 +137,6 @@ sub gethline {
 
 	my $res = join(':', @found);
 	return $res;
-}
-
-sub header {
-	my $self = shift;
-
-	$self->signed or
-		return new Mail::DomainKeys::Header(
-			Line => "DomainKey-Status: no signature");
-
-	$self->signature->status and
-		return new Mail::DomainKeys::Header(
-		Line => "DomainKey-Status: " . $self->signature->status);
 }
 
 sub nofws {	
@@ -167,10 +155,6 @@ sub nofws {
 		$text .= $line . "\r\n";
 	}
 
-	# make sure there is a body before adding a seperator line
-	(scalar @{$self->{'BODY'}}) and
-		$text .= "\r\n";
-
 	# delete trailing blank lines
 	foreach (reverse @{$self->{'BODY'}}) {
 		/[^\s\r\n]/ and # last non-blank line
@@ -179,10 +163,13 @@ sub nofws {
 			pop @{$self->{'BODY'}};
 	}
 
+	# make sure there is a body before adding a seperator line
+	(scalar @{$self->{'BODY'}}) and
+		$text .= "\r\n";
+
 	foreach my $lin (@{$self->{'BODY'}}) {
-		my $line = $lin;
-		$line =~ s/[\s\r\n]//g;
-		$text .= $line . "\r\n";
+		$lin =~ s/[\s\r\n]//g;
+		$text .= $lin . "\r\n";
 	}
 
 	return $text;
@@ -200,16 +187,13 @@ sub simple {
 		$self->signature->wantheader($hdr->key) or
 			next;
 		my $line = $hdr->line;
+#		print STDERR $line;
 		# $line =~ s/([^\r])\n/$1\r\n/g; # yuck
 		#$line =~ s/([^\r])\n/$1\r\n/g; # yuck
 		#chomp($line);
-		$line =~ s/[\r\n]+//g;
-		$text .= $line . "\r\n";
+		$line =~ s/\r?\n/\r\n/gs;
+		$text .= $line;
 	}
-
-	# make sure there is a body before adding a seperator line
-	(scalar @{$self->{'BODY'}}) and
-		$text .= "\r\n";
 
 	# delete trailing blank lines
 	foreach (reverse @{$self->{'BODY'}}) {
@@ -219,14 +203,18 @@ sub simple {
 			pop @{$self->{'BODY'}};
 	}
 
+	# make sure there is a body before adding a seperator line
+	(scalar @{$self->{'BODY'}}) and
+		$text .= "\r\n";
+
 	foreach my $lin (@{$self->{'BODY'}}) {
 		my $line = $lin;
 		#$line eq "\n" and
 		#	$line = "\r\n";
 		#$line =~ s/([^\r])\n/$1\r\n/g; # yuck
 		#$text .= $line;
-		$line =~ s/[\r\n]+//g;
-		$text .= $line . "\r\n";
+		$line =~ s/\r?\n/\r\n/gs;
+		$text .= $line;
 	}
 
 	return $text;
@@ -236,12 +224,9 @@ sub sign {
 	my $self = shift;
 	my %prms = @_;
 
-	my $hline = $self->gethline($prms{'Headers'});
-
 	my $sign = new Mail::DomainKeys::Signature(
 		Method => $prms{'Method'},
 		Domain => $self->senderdomain,
-		Headers => $hline,
 		Selector => $prms{'Selector'},
 		Signing => 1);
 
