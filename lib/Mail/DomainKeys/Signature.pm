@@ -6,7 +6,7 @@ package Mail::DomainKeys::Signature;
 
 use strict;
 
-our $VERSION = "0.80";
+our $VERSION = "0.82";
 
 sub new {
 	my $type = shift;
@@ -20,6 +20,7 @@ sub new {
 	$self->{'HDRS'} = $prms{'Headers'};
 	$self->{'PROT'} = $prms{'Query'};
 	$self->{'SLCT'} = $prms{'Selector'};
+	$self->{'SHDR'} = $prms{'SignHeaders'};
 	$self->{'SIGN'} = $prms{'Signing'};
 	$self->{'CFWS'} = $prms{'FWS'};
 
@@ -60,15 +61,30 @@ sub wantheader {
 	my $self = shift;
 	my $attr = shift;
 
-	$self->headerlist or
-		return 1;
-	
-	foreach my $key ($self->headerlist) {
-		lc $attr eq lc $key and
-			return 1;
+       # we are signing, and a list of headers to sign was specified
+       if ($self->signheaderlist) {
+               foreach my $key ($self->signheaderlist) {
+                       lc $attr eq lc $key and
+                               return 1;
+               }
+
+               return;
 	}
 
-	return;
+       # we are verifying
+       if ($self->headerlist) {
+               foreach my $key ($self->headerlist) {
+                       lc $attr eq lc $key and
+                               return 1;
+               }
+
+               return;
+       }
+
+       # we are signing and a list of headers to sign was not specified,
+       # or we are verifying and the DomainKeys-Signature header does not
+       # have a h= term
+       return 1;
 }
 
 sub as_string {
@@ -82,6 +98,8 @@ sub as_string {
 	$self->headerlist and
 		$text .= "h=" . $self->headerlist . "; ";
 
+	# the draft expressed that q=dns was the default
+	# if unspecified, and no other protocols have been suggested
 #	$text .= "q=" . $self->protocol . "; ";
 	$text .= "c=" . $self->method . "; ";
 	$text .= "s=" . $self->selector . "; ";
@@ -158,10 +176,6 @@ sub verify {
 
 
 	$self->status("bad format"),
-
-	$self->protocol or
-		$self->errorstr("no query protocol specified"),
-		return;
 
 	$self->selector or
 		$self->errorstr("no selector specified"),
@@ -315,6 +329,20 @@ sub signature {
 	$self->{'DATA'};
 }	
 
+sub signheaderlist {
+       my $self = shift;
+
+       @_ and
+               $self->{'SHDR'} = shift;
+
+       if (wantarray and $self->{'SHDR'}) {
+               my @list = split /:/, $self->{'SHDR'};
+               return @list;
+       }
+
+       $self->{'SHDR'};
+}
+
 sub signing {
 	my $self = shift;
 
@@ -341,5 +369,6 @@ sub testing {
 
 	return;
 }
+
 
 1;

@@ -6,7 +6,7 @@ package Mail::DomainKeys;
 
 use strict;
 
-our $VERSION = "0.80";
+our $VERSION = "0.82";
 
 1;
 
@@ -21,7 +21,7 @@ Mail::DomainKeys - A perl implementation of DomainKeys
 Mail::DomainKeys is a perl implementation of Yahoo's mail signature
 protocol.
 
-This library allows one to sign and verify signatures as per per draft
+This library allows one to sign and verify signatures as per draft
 03 of the DomainKeys specification:
 
 http://www.ietf.org/internet-drafts/draft-delany-domainkeys-base-03.txt
@@ -89,8 +89,8 @@ modify it under the same terms as Perl itself.
 
 =head1 AVAILABILITY
 
-The latest version of  Mail::DomainKeys will be available on CPAN and at:
+The latest version of Mail::DomainKeys will be available on CPAN and at:
 
-  http://killa.net/infosec/Mail-DomainKeys/
+http://killa.net/infosec/Mail-DomainKeys/
 
 =cut  

@@ -8,7 +8,7 @@ use base "Mail::DomainKeys::Key";
 
 use strict;
 
-our $VERSION = "0.80";
+our $VERSION = "0.82";
 
 sub new {
 	my $type = shift;
@@ -172,10 +172,8 @@ sub verify {
 	my %prms = @_;
 
 
-	my $rtrn;
-
-	eval {
-		$rtrn = $self->cork->verify($prms{'Text'}, $prms{'Signature'});
+	my $rtrn = eval {
+		$self->cork->verify($prms{'Text'}, $prms{'Signature'});
 	}; 
 
 	$@ and

@@ -6,10 +6,10 @@ package Mail::DomainKeys::Message;
 
 use strict;
 
-our $VERSION = "0.80";
+our $VERSION = "0.82";
 
 sub load {
-	use Mail::Address;
+	use Email::Address;
 	use Mail::DomainKeys::Header;
 	use Mail::DomainKeys::Signature;
 
@@ -22,7 +22,8 @@ sub load {
 	my $file;
 
 	if ($prms{'File'}) {
-		if (ref $prms{'File'} and ref $prms{'File'} eq "GLOB") {
+		if (ref $prms{'File'} and (ref $prms{'File'} eq "GLOB" or
+					$prms{'File'}->isa("IO::Handle"))) {
 			$file = $prms{'File'};
 		} else {
 			return;
@@ -50,6 +51,7 @@ sub load {
 		}
 	} else {
 		while (<$file>) {
+			chomp;
 			s/\r$//;
 			last if /^$/;
 			if (/^\s/ and $head[$lnum-1]) {
@@ -63,6 +65,8 @@ sub load {
 		}
 	}
 
+	$self->{'HEAD'} = \@head;
+
 	my %seen = (FROM => 0, SIGN => 0, SNDR => 0);
 
 	foreach my $hdr (@head) {
@@ -72,11 +76,11 @@ sub load {
 			return;
 
 		if ($hdr->key =~ /^From$/i and !$seen{'FROM'}) {
-			my @list = parse Mail::Address($hdr->vunfolded);
+			my @list = parse Email::Address($hdr->vunfolded);
 			$self->{'FROM'} = $list[0]; 
 			$seen{'FROM'} = 1; 
 		} elsif ($hdr->key =~ /^Sender$/i and !$seen{'SNDR'}) {
-			my @list = parse Mail::Address($hdr->vunfolded);
+			my @list = parse Email::Address($hdr->vunfolded);
 			$self->{'SNDR'} = $list[0];
 			$seen{'SNDR'} = 1;
 		} elsif ($hdr->key =~ /^DomainKey-Signature$/i and
@@ -87,19 +91,20 @@ sub load {
 		}
 	}
 
-	my @body;
-
 	if ($prms{'BodyReference'}) {
-		@body = @{$prms{'BodyReference'}};
+		$self->{'BODY'} = $prms{'BodyReference'};
 	} else {
+		my @body;
+
 		while (<$file>) {
+			chomp;
 			s/\r$//;
 			push @body, $_;
 		}
+
+		$self->{'BODY'} = \@body;
 	}
 
-	$self->{'HEAD'} = \@head;
-	$self->{'BODY'} = \@body;
 
 	bless $self, $type;
 }
@@ -143,6 +148,7 @@ sub nofws {
 	my $self = shift;
 
 	my $text;
+	my @headers_used;
 
 
 	foreach my $hdr (@{$self->head}) {
@@ -150,9 +156,14 @@ sub nofws {
 			next;
 		$self->signature->wantheader($hdr->key) or
 			next;
+		push @headers_used, lc $hdr->key;
 		my $line = $hdr->unfolded;
 		$line =~ s/[\s\r\n]//g;
 		$text .= $line . "\r\n";
+	}
+
+	if ($self->signature->signheaderlist) {
+		$self->signature->headerlist(join(":", @headers_used));
 	}
 
 	# delete trailing blank lines
@@ -168,8 +179,9 @@ sub nofws {
 		$text .= "\r\n";
 
 	foreach my $lin (@{$self->{'BODY'}}) {
-		$lin =~ s/[\s\r\n]//g;
-		$text .= $lin . "\r\n";
+		my $str = $lin;
+		$str =~ s/[\s\r\n]//g;
+		$text .= $str . "\r\n";
 	}
 
 	return $text;
@@ -179,6 +191,7 @@ sub simple {
 	my $self = shift;
 
 	my $text;
+	my @headers_used;
 
 
 	foreach my $hdr (@{$self->head}) {
@@ -186,13 +199,19 @@ sub simple {
 			next;
 		$self->signature->wantheader($hdr->key) or
 			next;
-		my $line = $hdr->line;
+		push @headers_used, lc $hdr->key;
+#		my $line = $hdr->line;
 #		print STDERR $line;
 		# $line =~ s/([^\r])\n/$1\r\n/g; # yuck
 		#$line =~ s/([^\r])\n/$1\r\n/g; # yuck
 		#chomp($line);
-		$line =~ s/\r?\n/\r\n/gs;
-		$text .= $line;
+#		$line =~ s/\r?\n/\r\n/gs;
+#		$text .= $line;
+		$text .= $hdr->line . "\r\n";
+	}
+
+	if ($self->signature->signheaderlist) {
+		$self->signature->headerlist(join(":", @headers_used));
 	}
 
 	# delete trailing blank lines
@@ -208,13 +227,13 @@ sub simple {
 		$text .= "\r\n";
 
 	foreach my $lin (@{$self->{'BODY'}}) {
-		my $line = $lin;
+#		my $line = $lin;
 		#$line eq "\n" and
 		#	$line = "\r\n";
 		#$line =~ s/([^\r])\n/$1\r\n/g; # yuck
 		#$text .= $line;
-		$line =~ s/\r?\n/\r\n/gs;
-		$text .= $line;
+#		$line =~ s/\r?\n/\r\n/gs;
+		$text .= $lin . "\r\n";
 	}
 
 	return $text;
@@ -228,6 +247,7 @@ sub sign {
 		Method => $prms{'Method'},
 		Domain => $self->senderdomain,
 		Selector => $prms{'Selector'},
+		SignHeaders => $prms{'SignHeaders'},
 		Signing => 1);
 
 	$self->signature($sign);

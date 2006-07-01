@@ -1,0 +1,13 @@
+Thanks to:
+
+   * Robert Sanders for the signing code and DNS fixes.
+
+   * Jamie L. Penman-Smithson for the wrapping code, and the header order
+     workaround.
+
+   * Clayton Smith for fixing the trailing empty lines bug.
+
+   * Mark Delany for the canonifier torture tests.
+
+   * Lennert Buytenhek for the bodyref fixes and header list enhancements
+

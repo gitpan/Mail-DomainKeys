@@ -6,7 +6,7 @@ package Mail::DomainKeys::Policy;
 
 use strict;
 
-our $VERSION = "0.80";
+our $VERSION = "0.82";
 
 sub new {
 	my $type = shift;
@@ -40,16 +40,16 @@ sub fetch {
 	my $rslv = new Net::DNS::Resolver or
 		return;
 	
-	my $resp = $rslv->query($host, "TXT") or
-		return;
-
-	foreach my $ans ($resp->answer) {
-		next unless $ans->type eq "TXT";
-		$strn = join "", $ans->char_str_list;
+	if (my $resp = $rslv->query($host, "TXT")) {
+		foreach my $ans ($resp->answer) {
+			next unless $ans->type eq "TXT";
+			$strn = join "", $ans->char_str_list or
+				return;
+		}
+	} else {
+		# default policy is "sign some"
+		$strn = "o=~";
 	}
-
-	$strn or
-		return;
 
 	my $self = &parse_string($strn) or
 		return;
