@@ -6,10 +6,10 @@ package Mail::DomainKeys::Message;
 
 use strict;
 
-our $VERSION = "0.82";
+our $VERSION = "0.84";
 
 sub load {
-	use Email::Address;
+	use Mail::Address;
 	use Mail::DomainKeys::Header;
 	use Mail::DomainKeys::Signature;
 
@@ -76,11 +76,11 @@ sub load {
 			return;
 
 		if ($hdr->key =~ /^From$/i and !$seen{'FROM'}) {
-			my @list = parse Email::Address($hdr->vunfolded);
+			my @list = parse Mail::Address($hdr->vunfolded);
 			$self->{'FROM'} = $list[0]; 
 			$seen{'FROM'} = 1; 
 		} elsif ($hdr->key =~ /^Sender$/i and !$seen{'SNDR'}) {
-			my @list = parse Email::Address($hdr->vunfolded);
+			my @list = parse Mail::Address($hdr->vunfolded);
 			$self->{'SNDR'} = $list[0];
 			$seen{'SNDR'} = 1;
 		} elsif ($hdr->key =~ /^DomainKey-Signature$/i and

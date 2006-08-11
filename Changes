@@ -1,6 +1,11 @@
+version 0.84
+
+    * Back out change from Mail::Address to buggy Email::Address.
+    * Fix folding whitespace bug.
+
 version 0.82
 
-    * Fixes to body reference and added header list functionality
+    * Fixes to body reference and added header list functionality.
 
 version 0.80
 

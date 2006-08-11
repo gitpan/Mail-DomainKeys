@@ -6,7 +6,7 @@ package Mail::DomainKeys::Signature;
 
 use strict;
 
-our $VERSION = "0.82";
+our $VERSION = "0.84";
 
 sub new {
 	my $type = shift;
@@ -45,7 +45,7 @@ sub parse {
 				$self->{'METH'} = lc $1;
 			/^d=([A-Za-z0-9\-\.]+)$/ and
 				$self->{'DOMN'} = lc $1;
-			/^h=(\S+)$/ and
+			/^h=(.*)$/s and
 				$self->{'HDRS'} = lc $1;
 			/^q=(dns)$/i and
 				$self->{'PROT'} = lc $1;
@@ -268,7 +268,7 @@ sub headerlist {
 		$self->{'HDRS'} = shift;
 
 	if (wantarray and $self->{'HDRS'}) {
-		my @list = split /:/, $self->{'HDRS'};
+		my @list = split /[ \t]*:[ \t]*/, $self->{'HDRS'};
 		return @list;
 	}
 
