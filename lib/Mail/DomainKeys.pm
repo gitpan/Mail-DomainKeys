@@ -6,7 +6,7 @@ package Mail::DomainKeys;
 
 use strict;
 
-our $VERSION = "0.84";
+our $VERSION = "0.86";
 
 1;
 

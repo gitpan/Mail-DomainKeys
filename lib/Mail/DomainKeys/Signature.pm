@@ -6,7 +6,7 @@ package Mail::DomainKeys::Signature;
 
 use strict;
 
-our $VERSION = "0.84";
+our $VERSION = "0.86";
 
 sub new {
 	my $type = shift;
@@ -151,10 +151,13 @@ sub sign {
 	$self->protocol or $self->protocol("dns");
 	$self->algorithm or $self->algorithm("rsa-sha1");
 
-	# FIXME: only needs to match the end of the domain
-	#$prms{'Sender'}->host eq $self->domain or
-	#	$self->errorstr("domain does not match address"),
-	#	return;
+	# d=... The value in this tag MUST match the domain of the sending
+	# email address or MUST be one of the parent domains of the sending
+	# email address. Domain name comparison is case insensitive.
+	my $signing_domain = $self->domain;
+	$prms{'Sender'}->host =~ /(^|\.)\Q$signing_domain\E\z/i or
+		$self->errorstr("domain does not match address"),
+		return;
 
 	my $sign = $self->private->sign($text);
 	my $signb64 = encode_base64($sign, "");
@@ -204,7 +207,14 @@ sub verify {
 
 	$self->status("bad");
 
-	# FIXME: only needs to match the end of the domain
+	# d=... The value in this tag MUST match the domain of the sending
+	# email address or MUST be one of the parent domains of the sending
+	# email address. Domain name comparison is case insensitive.
+	my $signing_domain = $self->domain;
+	$prms{'Sender'}->host =~ /(^|\.)\Q$signing_domain\E\z/i or
+		$self->errorstr("domain does not match address"),
+		return;
+
 	$prms{'Sender'}->host eq $self->domain or
 		$self->errorstr("domain does not match address"),
 		return;

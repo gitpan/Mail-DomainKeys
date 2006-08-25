@@ -6,7 +6,7 @@ package Mail::DomainKeys::Message;
 
 use strict;
 
-our $VERSION = "0.84";
+our $VERSION = "0.86";
 
 sub load {
 	use Mail::Address;
@@ -41,7 +41,8 @@ sub load {
 			s/\r$//;
 			last if /^$/;
 			if (/^\s/ and $head[$lnum-1]) {
-				$head[$lnum-1]->append($_);
+				#$head[$lnum-1]->append($_);
+				$head[$lnum-1]->append("\n" . $_);
 				next;
 			}			
 			$head[$lnum] =
@@ -55,7 +56,8 @@ sub load {
 			s/\r$//;
 			last if /^$/;
 			if (/^\s/ and $head[$lnum-1]) {
-				$head[$lnum-1]->append($_);
+				#$head[$lnum-1]->append($_);
+				$head[$lnum-1]->append("\n" . $_);
 				next;
 			}			
 			$head[$lnum] =
@@ -158,7 +160,8 @@ sub nofws {
 			next;
 		push @headers_used, lc $hdr->key;
 		my $line = $hdr->unfolded;
-		$line =~ s/[\s\r\n]//g;
+		#$line =~ s/[\s\r\n]//g;
+		$line =~ s/[ \t\r\n]//g;
 		$text .= $line . "\r\n";
 	}
 
@@ -200,14 +203,10 @@ sub simple {
 		$self->signature->wantheader($hdr->key) or
 			next;
 		push @headers_used, lc $hdr->key;
-#		my $line = $hdr->line;
-#		print STDERR $line;
-		# $line =~ s/([^\r])\n/$1\r\n/g; # yuck
-		#$line =~ s/([^\r])\n/$1\r\n/g; # yuck
-		#chomp($line);
-#		$line =~ s/\r?\n/\r\n/gs;
-#		$text .= $line;
-		$text .= $hdr->line . "\r\n";
+		#$text .= $hdr->line . "\r\n";
+		my $lin = $hdr->line . "\n";
+		$lin =~ s/\n/\r\n/gs;
+		$text .= $lin;
 	}
 
 	if ($self->signature->signheaderlist) {
@@ -227,13 +226,9 @@ sub simple {
 		$text .= "\r\n";
 
 	foreach my $lin (@{$self->{'BODY'}}) {
-#		my $line = $lin;
-		#$line eq "\n" and
-		#	$line = "\r\n";
-		#$line =~ s/([^\r])\n/$1\r\n/g; # yuck
-		#$text .= $line;
-#		$line =~ s/\r?\n/\r\n/gs;
-		$text .= $lin . "\r\n";
+		my $str = $lin;
+		$str =~ s/\r?\n\z//;
+		$text .= $str . "\r\n";
 	}
 
 	return $text;
@@ -266,7 +261,8 @@ sub verify {
 
 	return $self->signature->verify(Text => $self->canonify,
 		Sender => ($self->sender or $self->from));
-
+		#Sender => ($self->sender or $self->from),
+		#SenderHdr => $self->sender, FromHdr => $self->from);
 }
 
 sub body {
