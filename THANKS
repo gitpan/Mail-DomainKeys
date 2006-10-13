@@ -12,5 +12,8 @@ Thanks to:
    * Lennert Buytenhek for the bodyref fixes and header list enhancements.
 
    * Mark Martinec for the headerlist folding-whitespace fix,
-     Email::Address regex loop, policy relaxation, and many other bugfixes.
+     Email::Address regex loop, policy relaxation, header regex fix, and many
+     other bugfixes.
+
+   * Ben Lentz for the malformed or missing policy fix.
 
