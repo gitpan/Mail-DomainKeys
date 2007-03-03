@@ -98,9 +98,7 @@ sub as_string {
 	$self->headerlist and
 		$text .= "h=" . $self->headerlist . "; ";
 
-	# the draft expressed that q=dns was the default
-	# if unspecified, and no other protocols have been suggested
-#	$text .= "q=" . $self->protocol . "; ";
+	$text .= "q=" . $self->protocol . "; ";
 	$text .= "c=" . $self->method . "; ";
 	$text .= "s=" . $self->selector . "; ";
 	$text .= "d=" . $self->domain . "; ";

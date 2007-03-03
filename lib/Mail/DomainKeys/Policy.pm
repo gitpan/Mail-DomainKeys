@@ -46,10 +46,7 @@ sub fetch {
 
 	}
 
-	$strn or
-		$strn = "o=~";
-
-	my $self = &parse_string($strn) or
+	my $self = &parse_string($strn or "") or
 		return;
 
 	bless $self, $type;	
@@ -152,25 +149,24 @@ sub testing {
 sub parse_string {
 	my $text = shift;
 
-	my %tags;
-
+	my $tags = {'PLCY' => "~"};
 
 	foreach my $tag (split /;/, $text) {
 		$tag =~ s/^\s*|\s*$//g;
 
 		foreach ($tag) {
 			/^n=(.*)$/ and
-				$tags{'NOTE'} = $1;
+				$tags->{'NOTE'} = $1;
 			/^o=(\~|\-)$/ and
-				$tags{'PLCY'} = $1;
+				$tags->{'PLCY'} = $1;
 			/^r=([\w\@\.]+)$/ and
-				$tags{'ADDR'} = $1;
+				$tags->{'ADDR'} = $1;
 			/^t=y$/ and
-				$tags{'TEST'} = 1;
+				$tags->{'TEST'} = 1;
 		}
 	}
 
-	return \%tags;
+	return $tags;
 }
 
 1;

@@ -6,7 +6,7 @@ package Mail::DomainKeys;
 
 use strict;
 
-our $VERSION = "0.88";
+our $VERSION = "1.0";
 
 1;
 
@@ -15,6 +15,20 @@ __END__
 =head1 NAME
 
 Mail::DomainKeys - A perl implementation of DomainKeys
+
+=head1 CAVEAT
+
+THIS MODULE IS OFFICIALLY UNSUPPORTED.
+
+Please move on to DKIM like a responsible Internet user.  I have.
+
+I will leave this module here on CPAN for a while, just in case someone
+has grown to depend on it.  It is apparent that DK will not be the way
+of the future. Thus, it is time to put this module to ground before it
+causes any further harm.
+
+Thanks for your support,
+Anthony
 
 =head1 SYNOPSIS
 

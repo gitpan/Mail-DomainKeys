@@ -247,7 +247,9 @@ sub sign {
 
 	$self->signature($sign);
 
-	$sign->sign(Text => $self->canonify, Private => $prms{'Private'});
+	$sign->sign(Text => $self->canonify, Private => $prms{'Private'},
+		Sender => ($self->sender or $self->from));
+
 
 	return $sign;
 }
@@ -260,9 +262,8 @@ sub verify {
 		return;
 
 	return $self->signature->verify(Text => $self->canonify,
-		Sender => ($self->sender or $self->from));
-		#Sender => ($self->sender or $self->from),
-		#SenderHdr => $self->sender, FromHdr => $self->from);
+		Sender => ($self->sender or $self->from),
+		SenderHdr => $self->sender, FromHdr => $self->from);
 }
 
 sub body {

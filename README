@@ -1,3 +1,19 @@
+THIS MODULE IS OFFICIALLY UNSUPPORTED.
+
+Please move on to DKIM like a responsible Internet user.  I have.
+
+I will leave this module here on CPAN for a while, just in case someone
+has grown to depend on it.  It is apparent that DK will not be the way
+of the future. Thus, it is time to put this module to ground before it
+causes any further harm.
+
+Thanks for your support,
+Anthony
+
+PS: Don't get a CPAN email address if you can avoid it. Muchos spam.
+
+----
+
 Yuck, I hate writing documentation.  You get what you pay for, though.  I
 intend to do a full documentation set starting with version 0.80.
 
